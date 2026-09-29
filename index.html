@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Счёт до 10</title>
+<title>Счёт до 10 — цикл</title>
 
 <!-- PWA-настройки -->
 <link rel="manifest" href="manifest.json">
@@ -64,7 +64,36 @@
   }
   .modes button:active { transform: scale(0.97); }
 
-  .stars { font-size: 18px; margin-bottom: 6px; min-height: 22px; }
+  .progress-bar {
+    width: 100%;
+    height: 10px;
+    background: #dfe6e9;
+    border-radius: 5px;
+    overflow: hidden;
+    margin: 8px 0;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #55efc4, #00b894);
+    width: 0%;
+    transition: width 0.4s;
+  }
+
+  .stars {
+    margin-bottom: 6px;
+    min-height: 34px;
+    display: flex;
+    justify-content: center;
+  }
+  .stars-count {
+    color: #e17055;
+    font-weight: bold;
+    font-size: 22px;
+    background: #fff5e6;
+    padding: 6px 18px;
+    border-radius: 12px;
+    display: inline-block;
+  }
 
   .task {
     font-size: 44px;
@@ -168,116 +197,202 @@
   }
   .actions button:active { transform: scale(0.96); }
 
+  /* Экран финиша */
+  .finish {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 0;
+  }
+  .finish.show { display: flex; }
+  .finish-title {
+    font-size: 32px;
+    color: #6c5ce7;
+    font-weight: bold;
+  }
+  .finish-stars-count {
+    font-size: 56px;
+    color: #e17055;
+    font-weight: bold;
+    background: #fff5e6;
+    padding: 16px 32px;
+    border-radius: 20px;
+    display: inline-block;
+  }
+  .finish-score {
+    font-size: 22px;
+    color: #e17055;
+    font-weight: bold;
+  }
+  .finish-button {
+    font-size: 20px;
+    padding: 14px 28px;
+    border: none;
+    border-radius: 14px;
+    background: #a29bfe;
+    color: white;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: bold;
+  }
+  .finish-button:active { transform: scale(0.96); }
+
   @media (max-height: 700px) {
     .task, .answer-box { font-size: 36px; }
     .keypad button { font-size: 22px; padding: 8px 0; }
     h1 { font-size: 15px; }
-    .stars { font-size: 16px; }
-  }
-
-  @media (min-width: 700px) {
-    .card { max-width: 480px; }
+    .stars-count { font-size: 18px; padding: 4px 14px; }
   }
 </style>
 </head>
 <body>
 <div class="card">
-  <h1>🧮 Счёт до 10</h1>
+  <h1>🧮 Счёт до 10 — цикл</h1>
 
-  <div class="modes">
-    <button id="modeAdd" class="active" onclick="setMode('add')">➕ Сложение</button>
-    <button id="modeSub" onclick="setMode('sub')">➖ Вычитание</button>
+  <!-- Экран игры -->
+  <div id="gameScreen">
+    <div class="modes">
+      <button id="modeAdd" class="active" onclick="setMode('add')">➕ Сложение</button>
+      <button id="modeSub" onclick="setMode('sub')">➖ Вычитание</button>
+    </div>
+
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+
+    <div class="stars" id="stars"></div>
+
+    <div class="task">
+      <span id="a">3</span> <span id="op">+</span> <span id="b">5</span> =
+      <span class="answer-box" id="answer">?</span>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+    <div class="dots" id="dots"></div>
+
+    <div class="keypad">
+      <button onclick="press('1')">1</button>
+      <button onclick="press('2')">2</button>
+      <button onclick="press('3')">3</button>
+      <button onclick="press('4')">4</button>
+      <button onclick="press('5')">5</button>
+      <button onclick="press('6')">6</button>
+      <button onclick="press('7')">7</button>
+      <button onclick="press('8')">8</button>
+      <button onclick="press('9')">9</button>
+      <button class="del" onclick="del()">⌫</button>
+      <button onclick="press('0')">0</button>
+      <button class="ok" onclick="check()">✓</button>
+    </div>
+
+    <div class="actions">
+      <button onclick="hint()">💡 Подсказка</button>
+      <button onclick="newTask()">🔄 Пропустить</button>
+    </div>
   </div>
 
-  <div class="stars" id="stars"></div>
-
-  <div class="task">
-    <span id="a">3</span> <span id="op">+</span> <span id="b">5</span> =
-    <span class="answer-box" id="answer">?</span>
-  </div>
-
-  <div class="feedback" id="feedback"></div>
-  <div class="dots" id="dots"></div>
-
-  <div class="keypad">
-    <button onclick="press('1')">1</button>
-    <button onclick="press('2')">2</button>
-    <button onclick="press('3')">3</button>
-    <button onclick="press('4')">4</button>
-    <button onclick="press('5')">5</button>
-    <button onclick="press('6')">6</button>
-    <button onclick="press('7')">7</button>
-    <button onclick="press('8')">8</button>
-    <button onclick="press('9')">9</button>
-    <button class="del" onclick="del()">⌫</button>
-    <button onclick="press('0')">0</button>
-    <button class="ok" onclick="check()">✓</button>
-  </div>
-
-  <div class="actions">
-    <button onclick="hint()">💡 Подсказка</button>
-    <button onclick="newTask()">🔄 Пропустить</button>
+  <!-- Экран финиша -->
+  <div class="finish" id="finishScreen">
+    <div class="finish-title">🎉 Цикл пройден!</div>
+    <div id="finishStars"></div>
+    <div class="finish-score" id="finishScore"></div>
+    <button class="finish-button" onclick="restartCycle()">🔄 Ещё раз</button>
   </div>
 </div>
 
 <script>
-let a, b, correct, input = "", score = 0;
+let a, b, correct, input = "";
 let mode = "add";
 const MAX = 10;
-const RETRY_AFTER = 4;   // через сколько примеров вернуть отложенный
+const RETRY_AFTER = 4;
 
-let retryQueue = [];      // очередь отложенных: [{a, b, op, correct, wait}]
-let taskCounter = 0;      // счётчик показанных примеров
-let currentTask = null;   // текущий пример (для возможной отладки)
+let allTasks = [];
+let remaining = [];
+let retryQueue = [];
+let stars = 0;
+let attemptCount = 0;
 
-function randFrom1(max) { return Math.floor(Math.random() * max) + 1; }
+// ============ ГЕНЕРАЦИЯ ВСЕХ 45 ПРИМЕРОВ ============
+
+function buildAllTasks(m) {
+  const tasks = [];
+  if (m === "add") {
+    for (let i = 1; i <= MAX - 1; i++) {
+      for (let j = 1; j <= MAX - i; j++) {
+        tasks.push({ a: i, b: j, op: "+", correct: i + j });
+      }
+    }
+  } else {
+    for (let i = 2; i <= MAX; i++) {
+      for (let j = 1; j <= i - 1; j++) {
+        tasks.push({ a: i, b: j, op: "−", correct: i - j });
+      }
+    }
+  }
+  return tasks;
+}
+
+function shuffle(arr) {
+  const arr2 = [...arr];
+  for (let i = arr2.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr2[i], arr2[j]] = [arr2[j], arr2[i]];
+  }
+  return arr2;
+}
+
+// ============ ЗАПУСК ЦИКЛА ============
 
 function setMode(m) {
   mode = m;
   document.getElementById("modeAdd").classList.toggle("active", m === "add");
   document.getElementById("modeSub").classList.toggle("active", m === "sub");
-  score = 0;
+  restartCycle();
+}
+
+function restartCycle() {
+  allTasks = buildAllTasks(mode);
+  remaining = shuffle(allTasks);
   retryQueue = [];
-  taskCounter = 0;
+  stars = 0;
+  input = "";
+  attemptCount = 0;
+
+  document.getElementById("gameScreen").style.display = "block";
+  document.getElementById("finishScreen").classList.remove("show");
+
   updateStars();
+  updateProgress();
   newTask();
 }
 
-// Показать конкретный пример
+// ============ ПОКАЗ ПРИМЕРА ============
+
 function showTask(task) {
   a = task.a;
   b = task.b;
   correct = task.correct;
-  currentTask = task;
 
   document.getElementById("op").textContent = task.op;
   document.getElementById("a").textContent = a;
   document.getElementById("b").textContent = b;
   input = "";
+  attemptCount = 0;
   document.getElementById("answer").textContent = "?";
   document.getElementById("feedback").textContent = "";
   document.getElementById("feedback").className = "feedback";
   document.getElementById("dots").innerHTML = "";
 }
 
-// Сгенерировать новый пример
-function generateTask() {
-  if (mode === "add") {
-    const na = randFrom1(MAX - 1);
-    const nb = randFrom1(MAX - na);
-    return { a: na, b: nb, op: "+", correct: na + nb };
-  } else {
-    const na = Math.floor(Math.random() * (MAX - 1)) + 2;
-    const nb = randFrom1(na - 1);
-    return { a: na, b: nb, op: "−", correct: na - nb };
-  }
-}
+// ============ ВЫБОР СЛЕДУЮЩЕГО ПРИМЕРА ============
 
 function newTask() {
-  taskCounter++;
+  if (remaining.length === 0 && retryQueue.length === 0) {
+    finishCycle();
+    return;
+  }
 
-  // Проверяем, не пора ли вернуть отложенный пример
-  // Ищем первый в очереди, у которого wait <= 0
   for (let i = 0; i < retryQueue.length; i++) {
     retryQueue[i].wait--;
   }
@@ -286,10 +401,27 @@ function newTask() {
   if (readyIndex !== -1) {
     const task = retryQueue.splice(readyIndex, 1)[0];
     showTask(task);
+  } else if (remaining.length > 0) {
+    const task = remaining.shift();
+    showTask(task);
   } else {
     showTask(generateTask());
   }
 }
+
+function generateTask() {
+  if (mode === "add") {
+    const na = Math.floor(Math.random() * (MAX - 1)) + 1;
+    const nb = Math.floor(Math.random() * (MAX - na)) + 1;
+    return { a: na, b: nb, op: "+", correct: na + nb };
+  } else {
+    const na = Math.floor(Math.random() * (MAX - 1)) + 2;
+    const nb = Math.floor(Math.random() * (na - 1)) + 1;
+    return { a: na, b: nb, op: "−", correct: na - nb };
+  }
+}
+
+// ============ ВВОД ============
 
 function press(n) {
   if (input.length >= 2) return;
@@ -302,33 +434,41 @@ function del() {
   document.getElementById("answer").textContent = input || "?";
 }
 
+// ============ ПРОВЕРКА ============
+
 function check() {
   if (input === "") return;
   const val = parseInt(input, 10);
   const fb = document.getElementById("feedback");
 
   if (val === correct) {
-    score++;
+    // ПРАВИЛЬНО
+    if (attemptCount === 0) {
+      stars++;    // звезда только если с первой попытки
+    }
     fb.textContent = ["Молодец! 🎉", "Верно! ⭐", "Супер! 🌟", "Отлично! 👏"][Math.floor(Math.random()*4)];
     fb.className = "feedback ok";
     updateStars();
+    updateProgress();
+
     setTimeout(newTask, 900);
   } else {
+    // НЕПРАВИЛЬНО
+    attemptCount++;
     fb.textContent = "Почти! Попробуй ещё 🙂";
     fb.className = "feedback no";
 
-    // Добавляем пример в очередь повторов (если его там ещё нет)
-    const alreadyQueued = retryQueue.some(t => t.a === a && t.b === b && t.op === document.getElementById("op").textContent);
+    const opText = document.getElementById("op").textContent;
+    const alreadyQueued = retryQueue.some(t => t.a === a && t.b === b && t.op === opText);
     if (!alreadyQueued) {
       retryQueue.push({
         a: a,
         b: b,
-        op: document.getElementById("op").textContent,
+        op: opText,
         correct: correct,
         wait: RETRY_AFTER
       });
     } else {
-      // Если пример уже в очереди — сбрасываем таймер
       const t = retryQueue.find(t => t.a === a && t.b === b);
       if (t) t.wait = RETRY_AFTER;
     }
@@ -337,6 +477,8 @@ function check() {
     setTimeout(() => { document.getElementById("answer").textContent = "?"; }, 700);
   }
 }
+
+// ============ ПОДСКАЗКА ============
 
 function hint() {
   const dots = document.getElementById("dots");
@@ -369,16 +511,44 @@ function hint() {
   }
 }
 
+// ============ ОТОБРАЖЕНИЕ ============
+
 function updateStars() {
-  let s = "";
-  for (let i = 0; i < Math.min(score, 15); i++) s += "⭐";
-  document.getElementById("stars").textContent = s;
+  document.getElementById("stars").innerHTML =
+    '<span class="stars-count">⭐ ' + stars + ' из 45</span>';
 }
 
-// Запуск
-newTask();
+function updateProgress() {
+  const total = allTasks.length;
+  const solved = total - remaining.length - retryQueue.length;
+  const percent = (solved / total) * 100;
+  document.getElementById("progressFill").style.width = percent + "%";
+}
 
-// Регистрация Service Worker для PWA
+// ============ ФИНИШ ============
+
+function finishCycle() {
+  document.getElementById("gameScreen").style.display = "none";
+  const fs = document.getElementById("finishScreen");
+  fs.classList.add("show");
+
+  document.getElementById("finishStars").innerHTML =
+    '<span class="finish-stars-count">⭐ ' + stars + ' из 45</span>';
+
+  let message = "";
+  if (stars === 45) message = "🏆 Идеально! Все 45 примеров с первой попытки!";
+  else if (stars >= 40) message = "🌟 Отлично! Очень близко к идеалу!";
+  else if (stars >= 30) message = "👍 Хорошо! Продолжай тренироваться!";
+  else message = "💪 Неплохо! Попробуй ещё раз — будет лучше!";
+
+  document.getElementById("finishScore").innerHTML =
+    message + "<br><br>Собрано звёзд: <b>" + stars + " из 45</b>";
+}
+
+// ============ СТАРТ ============
+
+restartCycle();
+
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('service-worker.js');
 }
