@@ -224,6 +224,11 @@
 let a, b, correct, input = "", score = 0;
 let mode = "add";
 const MAX = 10;
+const RETRY_AFTER = 4;   // через сколько примеров вернуть отложенный
+
+let retryQueue = [];      // очередь отложенных: [{a, b, op, correct, wait}]
+let taskCounter = 0;      // счётчик показанных примеров
+let currentTask = null;   // текущий пример (для возможной отладки)
 
 function randFrom1(max) { return Math.floor(Math.random() * max) + 1; }
 
@@ -232,22 +237,20 @@ function setMode(m) {
   document.getElementById("modeAdd").classList.toggle("active", m === "add");
   document.getElementById("modeSub").classList.toggle("active", m === "sub");
   score = 0;
+  retryQueue = [];
+  taskCounter = 0;
   updateStars();
   newTask();
 }
 
-function randTask() {
-  if (mode === "add") {
-    a = randFrom1(MAX - 1);
-    b = randFrom1(MAX - a);
-    correct = a + b;
-    document.getElementById("op").textContent = "+";
-  } else {
-    a = Math.floor(Math.random() * (MAX - 1)) + 2;
-    b = randFrom1(a - 1);
-    correct = a - b;
-    document.getElementById("op").textContent = "−";
-  }
+// Показать конкретный пример
+function showTask(task) {
+  a = task.a;
+  b = task.b;
+  correct = task.correct;
+  currentTask = task;
+
+  document.getElementById("op").textContent = task.op;
   document.getElementById("a").textContent = a;
   document.getElementById("b").textContent = b;
   input = "";
@@ -255,6 +258,37 @@ function randTask() {
   document.getElementById("feedback").textContent = "";
   document.getElementById("feedback").className = "feedback";
   document.getElementById("dots").innerHTML = "";
+}
+
+// Сгенерировать новый пример
+function generateTask() {
+  if (mode === "add") {
+    const na = randFrom1(MAX - 1);
+    const nb = randFrom1(MAX - na);
+    return { a: na, b: nb, op: "+", correct: na + nb };
+  } else {
+    const na = Math.floor(Math.random() * (MAX - 1)) + 2;
+    const nb = randFrom1(na - 1);
+    return { a: na, b: nb, op: "−", correct: na - nb };
+  }
+}
+
+function newTask() {
+  taskCounter++;
+
+  // Проверяем, не пора ли вернуть отложенный пример
+  // Ищем первый в очереди, у которого wait <= 0
+  for (let i = 0; i < retryQueue.length; i++) {
+    retryQueue[i].wait--;
+  }
+
+  const readyIndex = retryQueue.findIndex(t => t.wait <= 0);
+  if (readyIndex !== -1) {
+    const task = retryQueue.splice(readyIndex, 1)[0];
+    showTask(task);
+  } else {
+    showTask(generateTask());
+  }
 }
 
 function press(n) {
@@ -272,6 +306,7 @@ function check() {
   if (input === "") return;
   const val = parseInt(input, 10);
   const fb = document.getElementById("feedback");
+
   if (val === correct) {
     score++;
     fb.textContent = ["Молодец! 🎉", "Верно! ⭐", "Супер! 🌟", "Отлично! 👏"][Math.floor(Math.random()*4)];
@@ -281,6 +316,23 @@ function check() {
   } else {
     fb.textContent = "Почти! Попробуй ещё 🙂";
     fb.className = "feedback no";
+
+    // Добавляем пример в очередь повторов (если его там ещё нет)
+    const alreadyQueued = retryQueue.some(t => t.a === a && t.b === b && t.op === document.getElementById("op").textContent);
+    if (!alreadyQueued) {
+      retryQueue.push({
+        a: a,
+        b: b,
+        op: document.getElementById("op").textContent,
+        correct: correct,
+        wait: RETRY_AFTER
+      });
+    } else {
+      // Если пример уже в очереди — сбрасываем таймер
+      const t = retryQueue.find(t => t.a === a && t.b === b);
+      if (t) t.wait = RETRY_AFTER;
+    }
+
     input = "";
     setTimeout(() => { document.getElementById("answer").textContent = "?"; }, 700);
   }
@@ -291,7 +343,7 @@ function hint() {
   dots.innerHTML = "";
   const g1 = document.createElement("div"); g1.className = "dot-group";
 
-  if (mode === "add") {
+  if (document.getElementById("op").textContent === "+") {
     for (let i = 0; i < a; i++) {
       const d = document.createElement("div"); d.className = "dot"; g1.appendChild(d);
     }
@@ -323,9 +375,8 @@ function updateStars() {
   document.getElementById("stars").textContent = s;
 }
 
-function newTask() { randTask(); }
-
-randTask();
+// Запуск
+newTask();
 
 // Регистрация Service Worker для PWA
 if ('serviceWorker' in navigator) {
