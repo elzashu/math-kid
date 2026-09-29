@@ -1,4 +1,4 @@
-const CACHE = 'math-kid-v1';
+const CACHE = 'math-kid-v2';
 const FILES = ['./', './index.html', './manifest.json', './icon.png'];
 
 self.addEventListener('install', e => {
