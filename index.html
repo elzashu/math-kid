@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Счёт до 10</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    height: 100%;
+    overflow-y: auto;
+  }
+  body {
+    font-family: 'Comic Sans MS', system-ui, sans-serif;
+    background: linear-gradient(160deg, #ffeaa7, #a29bfe);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 8px;
+  }
+  .card {
+    background: white;
+    border-radius: 22px;
+    padding: 14px 16px;
+    max-width: 500px;
+    width: 100%;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.22);
+    text-align: center;
+  }
+  h1 { font-size: 17px; color: #6c5ce7; margin-bottom: 8px; }
+
+  .modes {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 8px;
+  }
+  .modes button {
+    flex: 1;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: bold;
+    padding: 8px 6px;
+    border: 3px solid transparent;
+    border-radius: 12px;
+    background: #dfe6e9;
+    color: #636e72;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .modes button.active {
+    background: #a29bfe;
+    color: white;
+    border-color: #6c5ce7;
+  }
+  .modes button:active { transform: scale(0.97); }
+
+  .stars { font-size: 18px; margin-bottom: 6px; min-height: 22px; }
+
+  .task {
+    font-size: 44px;
+    font-weight: bold;
+    color: #2d3436;
+    margin: 6px 0;
+    letter-spacing: 2px;
+  }
+  .answer-box {
+    font-size: 44px;
+    font-weight: bold;
+    color: #0984e3;
+    min-height: 54px;
+    border-bottom: 4px dashed #b2bec3;
+    display: inline-block;
+    min-width: 80px;
+    padding: 0 6px;
+  }
+  .feedback {
+    font-size: 20px;
+    min-height: 26px;
+    margin: 6px 0;
+    font-weight: bold;
+  }
+  .feedback.ok { color: #00b894; }
+  .feedback.no { color: #e17055; }
+
+  .dots {
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin: 6px 0;
+    min-height: 34px;
+  }
+  .dot-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    max-width: 120px;
+    justify-content: center;
+  }
+  .dot {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: #74b9ff;
+  }
+  .dot.plus { background: #ffeaa7; }
+  .dot.crossed { background: #b2bec3; position: relative; }
+  .dot.crossed::after {
+    content: "✕";
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #d63031;
+    font-size: 12px;
+    font-weight: bold;
+  }
+
+  .keypad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 7px;
+    margin-top: 8px;
+  }
+  .keypad button {
+    font-size: 26px;
+    font-weight: bold;
+    padding: 10px 0;
+    border: none;
+    border-radius: 12px;
+    background: #dfe6e9;
+    color: #2d3436;
+    cursor: pointer;
+    transition: transform 0.08s, background 0.15s;
+    font-family: inherit;
+    touch-action: manipulation;
+  }
+  .keypad button:active { transform: scale(0.94); background: #b2bec3; }
+  .keypad button.del { background: #fab1a0; }
+  .keypad button.ok  { background: #55efc4; }
+
+  .actions {
+    margin-top: 8px;
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+  }
+  .actions button {
+    font-size: 14px;
+    padding: 8px 14px;
+    border: none;
+    border-radius: 10px;
+    background: #a29bfe;
+    color: white;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .actions button:active { transform: scale(0.96); }
+
+  @media (max-height: 700px) {
+    .task, .answer-box { font-size: 36px; }
+    .keypad button { font-size: 22px; padding: 8px 0; }
+    h1 { font-size: 15px; }
+    .stars { font-size: 16px; }
+  }
+
+  @media (min-width: 700px) {
+    .card { max-width: 480px; }
+  }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>🧮 Счёт до 10</h1>
+
+  <div class="modes">
+    <button id="modeAdd" class="active" onclick="setMode('add')">➕ Сложение</button>
+    <button id="modeSub" onclick="setMode('sub')">➖ Вычитание</button>
+  </div>
+
+  <div class="stars" id="stars"></div>
+
+  <div class="task">
+    <span id="a">3</span> <span id="op">+</span> <span id="b">5</span> =
+    <span class="answer-box" id="answer">?</span>
+  </div>
+
+  <div class="feedback" id="feedback"></div>
+  <div class="dots" id="dots"></div>
+
+  <div class="keypad">
+    <button onclick="press('1')">1</button>
+    <button onclick="press('2')">2</button>
+    <button onclick="press('3')">3</button>
+    <button onclick="press('4')">4</button>
+    <button onclick="press('5')">5</button>
+    <button onclick="press('6')">6</button>
+    <button onclick="press('7')">7</button>
+    <button onclick="press('8')">8</button>
+    <button onclick="press('9')">9</button>
+    <button class="del" onclick="del()">⌫</button>
+    <button onclick="press('0')">0</button>
+    <button class="ok" onclick="check()">✓</button>
+  </div>
+
+  <div class="actions">
+    <button onclick="hint()">💡 Подсказка</button>
+    <button onclick="newTask()">🔄 Пропустить</button>
+  </div>
+</div>
+
+<script>
+let a, b, correct, input = "", score = 0;
+let mode = "add";
+const MAX = 10;
+
+function randFrom1(max) { return Math.floor(Math.random() * max) + 1; }
+
+function setMode(m) {
+  mode = m;
+  document.getElementById("modeAdd").classList.toggle("active", m === "add");
+  document.getElementById("modeSub").classList.toggle("active", m === "sub");
+  score = 0;
+  updateStars();
+  newTask();
+}
+
+function randTask() {
+  if (mode === "add") {
+    a = randFrom1(MAX - 1);
+    b = randFrom1(MAX - a);
+    correct = a + b;
+    document.getElementById("op").textContent = "+";
+  } else {
+    a = Math.floor(Math.random() * (MAX - 1)) + 2;
+    b = randFrom1(a - 1);
+    correct = a - b;
+    document.getElementById("op").textContent = "−";
+  }
+  document.getElementById("a").textContent = a;
+  document.getElementById("b").textContent = b;
+  input = "";
+  document.getElementById("answer").textContent = "?";
+  document.getElementById("feedback").textContent = "";
+  document.getElementById("feedback").className = "feedback";
+  document.getElementById("dots").innerHTML = "";
+}
+
+function press(n) {
+  if (input.length >= 2) return;
+  input += n;
+  document.getElementById("answer").textContent = input;
+}
+
+function del() {
+  input = input.slice(0, -1);
+  document.getElementById("answer").textContent = input || "?";
+}
+
+function check() {
+  if (input === "") return;
+  const val = parseInt(input, 10);
+  const fb = document.getElementById("feedback");
+  if (val === correct) {
+    score++;
+    fb.textContent = ["Молодец! 🎉", "Верно! ⭐", "Супер! 🌟", "Отлично! 👏"][Math.floor(Math.random()*4)];
+    fb.className = "feedback ok";
+    updateStars();
+    setTimeout(newTask, 900);
+  } else {
+    fb.textContent = "Почти! Попробуй ещё 🙂";
+    fb.className = "feedback no";
+    input = "";
+    setTimeout(() => { document.getElementById("answer").textContent = "?"; }, 700);
+  }
+}
+
+function hint() {
+  const dots = document.getElementById("dots");
+  dots.innerHTML = "";
+  const g1 = document.createElement("div"); g1.className = "dot-group";
+
+  if (mode === "add") {
+    for (let i = 0; i < a; i++) {
+      const d = document.createElement("div"); d.className = "dot"; g1.appendChild(d);
+    }
+    const g2 = document.createElement("div"); g2.className = "dot-group";
+    for (let i = 0; i < b; i++) {
+      const d = document.createElement("div"); d.className = "dot plus"; g2.appendChild(d);
+    }
+    dots.appendChild(g1);
+    const plus = document.createElement("div");
+    plus.style.fontSize = "26px";
+    plus.style.color = "#636e72";
+    plus.style.alignSelf = "center";
+    plus.textContent = "+";
+    dots.appendChild(plus);
+    dots.appendChild(g2);
+  } else {
+    for (let i = 0; i < a; i++) {
+      const d = document.createElement("div");
+      d.className = "dot" + (i >= a - b ? " crossed" : "");
+      g1.appendChild(d);
+    }
+    dots.appendChild(g1);
+  }
+}
+
+function updateStars() {
+  let s = "";
+  for (let i = 0; i < Math.min(score, 15); i++) s += "⭐";
+  document.getElementById("stars").textContent = s;
+}
+
+function newTask() { randTask(); }
+
+randTask();
+</script>
+</body>
+</html>
